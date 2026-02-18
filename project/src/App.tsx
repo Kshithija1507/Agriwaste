@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -11,6 +10,10 @@ import Suggestions from './pages/Suggestions';
 import Tutorials from './pages/Tutorials';
 import Profile from './pages/Profile';
 import CommunityRatings from './components/dashboard/CommunityRatings';
+import Recommendations from './pages/Recommendations.tsx';
+import WeatherAdvisory from './pages/WeatherAdvisory.tsx';
+import DiseaseDetector from './pages/DiseaseDetector.tsx';
+import AdminDashboard from './pages/AdminDashboard.tsx';
 
 function App() {
   return (
@@ -22,7 +25,7 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            
+
             {/* Protected Routes */}
             <Route
               path="/waste-options"
@@ -56,8 +59,12 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/recommendations" element={<ProtectedRoute><Recommendations /></ProtectedRoute>} />
+            <Route path="/weather" element={<ProtectedRoute><WeatherAdvisory /></ProtectedRoute>} />
+            <Route path="/disease-detector" element={<ProtectedRoute><DiseaseDetector /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="/community" element={<CommunityRatings />} />
-            
+
             {/* Default redirect to About page */}
             <Route path="/" element={<Navigate to="/about" replace />} />
           </Routes>

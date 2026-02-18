@@ -1,23 +1,32 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { 
-  Leaf, 
-  Package, 
-  Lightbulb, 
-  Play, 
+import {
+  Leaf,
+  Package,
+  Lightbulb,
+  Play,
   User,
   LogOut,
   Menu,
   X,
-  Info
+  Info,
+  Globe,
+  Scan
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const { logout, isAuthenticated } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const { i18n } = useTranslation();
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
 
   const handleLogout = () => {
     logout();
@@ -35,11 +44,14 @@ const Navbar: React.FC = () => {
 
   // Navbar items in the exact order requested
   const navItems = [
-    { path: '/about', label: 'About', icon: Info },
-    { path: '/waste-options', label: 'Waste Options', icon: Package },
-    { path: '/suggestions', label: 'Suggestions', icon: Lightbulb },
-    { path: '/tutorials', label: 'Tutorials', icon: Play },
-    { path: '/profile', label: 'Profile', icon: User },
+    { path: '/about', label: i18n.t('nav_about'), icon: Info },
+    { path: '/waste-options', label: i18n.t('nav_waste_options'), icon: Package },
+    { path: '/suggestions', label: i18n.t('nav_suggestions'), icon: Lightbulb },
+    { path: '/recommendations', label: i18n.t('nav_ai_plan'), icon: Leaf },
+    { path: '/weather', label: i18n.t('nav_weather'), icon: Lightbulb },
+    { path: '/disease-detector', label: i18n.t('nav_disease'), icon: Scan },
+    { path: '/tutorials', label: i18n.t('nav_tutorials'), icon: Play },
+    { path: '/profile', label: i18n.t('nav_profile'), icon: User },
   ];
 
   const isActivePath = (path: string) => {
@@ -74,25 +86,43 @@ const Navbar: React.FC = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
-                    isActivePath(item.path)
-                      ? 'bg-green-100 text-green-700 border border-green-200'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                  }`}
+                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${isActivePath(item.path)
+                    ? 'bg-green-100 text-green-700 border border-green-200'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    }`}
                 >
                   <Icon className="h-4 w-4 mr-2" />
                   {item.label}
                 </Link>
               );
             })}
-            
+
             <button
               onClick={handleLogout}
               className="flex items-center px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors duration-200 ml-2"
             >
               <LogOut className="h-4 w-4 mr-2" />
-              Logout
+              {i18n.t('logout')}
             </button>
+
+            <div className="relative ml-4">
+              <button
+                onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                title="Select Language"
+              >
+                <Globe className="h-5 w-5 text-gray-600" />
+              </button>
+
+              {isLangMenuOpen && (
+                <div className="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-xl border border-gray-100 py-1 z-50">
+                  <button onClick={() => { changeLanguage('en'); setIsLangMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700">English</button>
+                  <button onClick={() => { changeLanguage('hi'); setIsLangMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700">हिंदी (Hindi)</button>
+                  <button onClick={() => { changeLanguage('te'); setIsLangMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700">తెలుగు (Telugu)</button>
+                  <button onClick={() => { changeLanguage('ta'); setIsLangMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700">தமிழ் (Tamil)</button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Mobile menu button */}
@@ -124,24 +154,23 @@ const Navbar: React.FC = () => {
                   key={item.path}
                   to={item.path}
                   onClick={closeMobileMenu}
-                  className={`flex items-center px-3 py-3 rounded-lg text-base font-medium transition-colors duration-200 ${
-                    isActivePath(item.path)
-                      ? 'bg-green-100 text-green-700 border border-green-200'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                  }`}
+                  className={`flex items-center px-3 py-3 rounded-lg text-base font-medium transition-colors duration-200 ${isActivePath(item.path)
+                    ? 'bg-green-100 text-green-700 border border-green-200'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    }`}
                 >
                   <Icon className="h-5 w-5 mr-3" />
                   {item.label}
                 </Link>
               );
             })}
-            
+
             <button
               onClick={handleLogout}
               className="flex items-center w-full px-3 py-3 rounded-lg text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors duration-200"
             >
               <LogOut className="h-5 w-5 mr-3" />
-              Logout
+              {i18n.t('logout')}
             </button>
           </div>
         </div>

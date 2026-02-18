@@ -60,21 +60,45 @@ const SuggestionTool: React.FC = () => {
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) return;
-    
+
     setLoading(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const filteredSuggestions = wasteSuggestions.filter(suggestion =>
-      suggestion.waste.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      suggestion.products.some(product => 
-        product.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    );
-    
-    setSuggestions(filteredSuggestions);
-    setLoading(false);
+
+    try {
+      // API call to backend
+      const response = await fetch('http://localhost:5000/api/suggestions/ai', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ wasteType: searchTerm }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch suggestions');
+      }
+
+      const data = await response.json();
+
+      if (data.suggestions) {
+        setSuggestions(data.suggestions);
+      } else {
+        // Fallback or empty state if weird format
+        setSuggestions([]);
+      }
+
+    } catch (error) {
+      console.error("Error fetching suggestions:", error);
+      // Fallback: Filter local wasteSuggestions if API fails (optional, but good UX)
+      const filteredSuggestions = wasteSuggestions.filter(suggestion =>
+        suggestion.waste.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        suggestion.products.some(product =>
+          product.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      );
+      setSuggestions(filteredSuggestions);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -147,7 +171,7 @@ const SuggestionTool: React.FC = () => {
           <h3 className="text-lg font-semibold text-gray-900">
             Suggestions for "{searchTerm}"
           </h3>
-          
+
           {suggestions.map((suggestion) => (
             <div key={suggestion.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start mb-3">
@@ -158,9 +182,9 @@ const SuggestionTool: React.FC = () => {
                   {suggestion.difficulty}
                 </span>
               </div>
-              
+
               <p className="text-gray-600 mb-3">{suggestion.description}</p>
-              
+
               <div className="mb-3">
                 <div className="flex items-center mb-2">
                   <Recycle className="h-4 w-4 mr-2 text-green-600" />
@@ -177,7 +201,7 @@ const SuggestionTool: React.FC = () => {
                   ))}
                 </div>
               </div>
-              
+
               <div className="bg-blue-50 p-3 rounded-lg">
                 <div className="flex items-center">
                   <div className="h-2 w-2 bg-blue-500 rounded-full mr-2"></div>

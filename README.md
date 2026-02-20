@@ -1,4 +1,5 @@
 # Agriwaste Full-Stack Application
+![Agriwaste Features Dashboard](./assets/features_dashboard.png)
 
 Welcome to the Agriwaste project! This is a full-stack application containing a React frontend (Vite) and an Express.js backend (Node.js).
 

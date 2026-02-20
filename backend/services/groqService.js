@@ -105,3 +105,25 @@ export const getAiSuggestions = async (wasteType) => {
     throw new Error("Failed to fetch AI suggestions");
   }
 };
+
+export const getChatbotResponse = async (messagesHistory) => {
+  try {
+    // Create a system message setting the chatbot identity
+    const systemMessage = {
+      role: "system",
+      content: "You are AgriBot, a helpful, precise, and friendly virtual assistant for the Agriwaste platform. You answer questions related to agriculture, farming, crops, and agricultural waste management. Keep your answers relatively short and conversational. Do not output JSON, speak in normal text."
+    };
+
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [systemMessage, ...messagesHistory],
+      model: "llama-3.3-70b-versatile",
+      temperature: 0.7,
+      max_tokens: 500,
+    });
+
+    return chatCompletion.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response.";
+  } catch (error) {
+    console.error("Groq AI Chatbot Error:", error);
+    throw new Error("Failed to fetch chatbot response");
+  }
+};

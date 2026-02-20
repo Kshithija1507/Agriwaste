@@ -15,6 +15,7 @@ import wateringRoutes from "./routes/watering.js";
 import marketplaceRoutes from "./routes/marketplace.js";
 import weatherRoutes from "./routes/weather.js";
 import diseaseRoutes from "./routes/disease.js";
+import chatRoutes from "./routes/chat.js";
 
 
 dotenv.config();
@@ -40,6 +41,7 @@ app.use("/api/watering", wateringRoutes);
 app.use("/api/marketplace", marketplaceRoutes);
 app.use("/api/weather", weatherRoutes);
 app.use("/api/disease", diseaseRoutes);
+app.use("/api/chat", chatRoutes);
 
 // ✅ Health check route
 app.get("/", (req, res) => {

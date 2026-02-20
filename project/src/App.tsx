@@ -14,6 +14,7 @@ import Recommendations from './pages/Recommendations.tsx';
 import WeatherAdvisory from './pages/WeatherAdvisory.tsx';
 import DiseaseDetector from './pages/DiseaseDetector.tsx';
 import AdminDashboard from './pages/AdminDashboard.tsx';
+import Chatbot from './components/Chatbot.tsx';
 
 function App() {
   return (
@@ -68,6 +69,7 @@ function App() {
             {/* Default redirect to About page */}
             <Route path="/" element={<Navigate to="/about" replace />} />
           </Routes>
+          <Chatbot />
         </Layout>
       </Router>
     </AuthProvider>

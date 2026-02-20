@@ -38,7 +38,8 @@ The frontend typically runs on port 5173. Open your browser and navigate to `htt
 
 ## Core Features
 1. **Weather Advisory**: Uses OpenWeather API to fetch weather and provide basic agricultural advisories.
-2. Multiple UI modules for agriculture management.
+2. **AI Crop Suggestions & Recommendations**: Leverages the powerful **Groq AI** to dynamically suggest crops to be grown based on location, soil type, sunlight, and type of agricultural waste.
+3. Multiple UI modules for agriculture management such as standard suggestions, disease detectors, and video tutorials.
 
 ---
 *For more specific details, see the README files inside the `backend` and `project` folders.*

@@ -5,6 +5,7 @@ This directory contains the Express.js server for the Agriwaste application.
 ## Core Technologies
 - **Express.js**: Web framework for building API routes.
 - **Mongoose**: MongoDB object modeling tool.
+- **Groq SDK**: Integrated to power fast, AI-driven crop suggestions and recommendations based on environmental inputs.
 - **Axios**: HTTP client for fetching data from external APIs (like OpenWeather API).
 - **Dotenv**: Environment variable management.
 - **Nodemon**: Development utility to auto-restart the server on file changes.

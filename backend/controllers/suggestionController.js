@@ -1,4 +1,6 @@
 import Suggestion from "../models/Suggestion.js";
+import { getAiSuggestions } from "../services/groqService.js";
+
 
 // ✅ Create Suggestion
 export const createSuggestion = async (req, res) => {
@@ -32,5 +34,19 @@ export const likeSuggestion = async (req, res) => {
     res.json(updated);
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+};
+
+// 🤖 Get AI Suggestions
+export const getAiSuggestionsController = async (req, res) => {
+  try {
+    const { wasteType } = req.body;
+    if (!wasteType) {
+      return res.status(400).json({ message: "Waste type is required" });
+    }
+    const aiResponse = await getAiSuggestions(wasteType);
+    res.json(aiResponse);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };

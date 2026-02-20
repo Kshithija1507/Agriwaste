@@ -18,9 +18,20 @@ const WeatherAdvisory = () => {
         e.preventDefault();
         if (!location) return;
         try {
+            // Using a try-catch block here is essential because network requests can fail for many reasons:
+            // 1. The local backend server (localhost:5000) might be down or unreachable.
+            // 2. The user might have lost their internet connection.
+            // 3. The backend might throw a 500 error if it fails to fetch from OpenWeather API.
+            // If we don't catch these errors, it could result in uncaught promise rejections, 
+            // potentially breaking the React component lifecycle or rendering a blank screen (white screen of death).
             const res = await axios.get(`http://localhost:5000/api/weather/${location}`);
             setWeather(res.data);
-        } catch (err) { console.error(err); }
+        } catch (err) {
+            // Catching the error ensures the UI stays intact and functional, allowing the user to try again.
+            // In a production app, we would typically set an error state here (e.g., setError('Failed to fetch data')) 
+            // to show a friendly failure message in the UI instead of just logging to the console.
+            console.error(err);
+        }
     };
 
     return (

@@ -10,6 +10,11 @@ import ratingsRoutes from "./routes/ratings.js";
 import suggestionsRoutes from "./routes/suggestions.js";
 import wasteToProductRoutes from "./routes/wasteToProductRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
+import recommendationRoutes from "./routes/recommendations.js";
+import wateringRoutes from "./routes/watering.js";
+import marketplaceRoutes from "./routes/marketplace.js";
+import weatherRoutes from "./routes/weather.js";
+import diseaseRoutes from "./routes/disease.js";
 
 
 dotenv.config();
@@ -30,6 +35,11 @@ app.use("/api/ratings", ratingsRoutes);
 app.use("/api/suggestions", suggestionsRoutes);
 app.use("/api/waste", wasteToProductRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/recommendations", recommendationRoutes);
+app.use("/api/watering", wateringRoutes);
+app.use("/api/marketplace", marketplaceRoutes);
+app.use("/api/weather", weatherRoutes);
+app.use("/api/disease", diseaseRoutes);
 
 // ✅ Health check route
 app.get("/", (req, res) => {

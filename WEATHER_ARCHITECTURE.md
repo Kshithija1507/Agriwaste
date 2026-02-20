@@ -198,6 +198,6 @@ flowchart LR
     UC2 -.->|include| UC4
     UC4 --> Mongo
 
-    UC4 -.->|extends (if cache miss)| UC5
+    UC4 -.->|extends if cache miss| UC5
     UC5 --> OpenWeather
 ```

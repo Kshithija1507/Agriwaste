@@ -106,12 +106,21 @@ export const getAiSuggestions = async (wasteType) => {
   }
 };
 
-export const getChatbotResponse = async (messagesHistory) => {
+export const getChatbotResponse = async (messagesHistory, languageCode) => {
   try {
-    // Create a system message setting the chatbot identity
+    // Determine language name from code
+    const langMap = {
+      'en': 'English',
+      'hi': 'Hindi (हिंदी)',
+      'te': 'Telugu (తెలుగు)',
+      'ta': 'Tamil (தமிழ்)'
+    };
+    const targetLanguage = langMap[languageCode] || 'English';
+
+    // Create a system message setting the chatbot identity and target language explicitly
     const systemMessage = {
       role: "system",
-      content: "You are AgriBot, a helpful, precise, and friendly virtual assistant for the Agriwaste platform. You answer questions related to agriculture, farming, crops, and agricultural waste management. Keep your answers relatively short and conversational. Do not output JSON, speak in normal text."
+      content: `You are AgriBot, a helpful, precise, and friendly virtual assistant for the Agriwaste platform. You answer questions related to agriculture, farming, crops, and agricultural waste management. You MUST answer the user strictly in ${targetLanguage}. Keep your answers relatively short and conversational. Do not output JSON, speak in normal text.`
     };
 
     const chatCompletion = await groq.chat.completions.create({

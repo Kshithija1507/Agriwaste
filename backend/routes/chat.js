@@ -5,14 +5,14 @@ const router = express.Router();
 
 router.post("/", async (req, res) => {
     try {
-        const { messages } = req.body;
+        const { messages, language } = req.body;
 
         if (!messages || !Array.isArray(messages)) {
             return res.status(400).json({ message: "Invalid message format required. Array of messages expected." });
         }
 
         // Call AI Service
-        const aiResponse = await getChatbotResponse(messages);
+        const aiResponse = await getChatbotResponse(messages, language || 'en');
 
         res.status(200).json({
             message: "Chat response fetched successfully",

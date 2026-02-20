@@ -1,19 +1,35 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { MessageSquare, Send, Minimize2 } from 'lucide-react';
+import { MessageSquare, Send, Minimize2, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Message {
     role: 'user' | 'assistant';
     content: string;
 }
 
+// Global declaration for Speech Recognition API
+declare global {
+    interface Window {
+        SpeechRecognition: any;
+        webkitSpeechRecognition: any;
+    }
+}
+
 const Chatbot: React.FC = () => {
+    const { i18n } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<Message[]>([
         { role: 'assistant', content: "Hello! I am AgriBot. How can I assist you with your farming and agricultural questions today?" }
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+
+    // Voice State
+    const [isListening, setIsListening] = useState(false);
+    const [isMuted, setIsMuted] = useState(false);
+    const recognitionRef = useRef<any>(null);
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
@@ -23,6 +39,74 @@ const Chatbot: React.FC = () => {
     useEffect(() => {
         scrollToBottom();
     }, [messages, isOpen]);
+
+    // Setup Speech Recognition
+    useEffect(() => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            recognitionRef.current = new SpeechRecognition();
+            recognitionRef.current.continuous = false;
+            recognitionRef.current.interimResults = false;
+
+            recognitionRef.current.onresult = (event: any) => {
+                const transcript = event.results[0][0].transcript;
+                setInput(transcript);
+                setIsListening(false);
+            };
+
+            recognitionRef.current.onerror = (event: any) => {
+                console.error("Speech Recognition Error", event.error);
+                setIsListening(false);
+            };
+
+            recognitionRef.current.onend = () => {
+                setIsListening(false);
+            };
+        }
+    }, []);
+
+    // Update Speech Recognition Language when App Language Changes
+    useEffect(() => {
+        if (recognitionRef.current) {
+            let langCode = 'en-US';
+            if (i18n.language === 'hi') langCode = 'hi-IN';
+            if (i18n.language === 'te') langCode = 'te-IN';
+            if (i18n.language === 'ta') langCode = 'ta-IN';
+            recognitionRef.current.lang = langCode;
+        }
+    }, [i18n.language]);
+
+    const toggleListening = () => {
+        if (isListening) {
+            recognitionRef.current?.stop();
+            setIsListening(false);
+        } else {
+            try {
+                recognitionRef.current?.start();
+                setIsListening(true);
+            } catch (e) {
+                console.error("Could not start speech recognition", e);
+            }
+        }
+    };
+
+    // Text to Speech Function
+    const speakText = (text: string) => {
+        if (isMuted || !('speechSynthesis' in window)) return;
+
+        // Cancel any ongoing speech
+        window.speechSynthesis.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(text);
+
+        let langCode = 'en-US';
+        if (i18n.language === 'hi') langCode = 'hi-IN';
+        if (i18n.language === 'te') langCode = 'te-IN';
+        if (i18n.language === 'ta') langCode = 'ta-IN';
+        utterance.lang = langCode;
+
+        window.speechSynthesis.speak(utterance);
+    };
 
     const handleSend = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
@@ -39,13 +123,21 @@ const Chatbot: React.FC = () => {
         try {
             // Send the entire conversation history to maintain context
             const res = await axios.post('http://localhost:5000/api/chat', {
-                messages: newMessages
+                messages: newMessages,
+                language: i18n.language // Pass current language to backend
             });
 
-            setMessages([...newMessages, { role: 'assistant', content: res.data.reply }]);
+            const replyText = res.data.reply;
+            setMessages([...newMessages, { role: 'assistant', content: replyText }]);
+
+            // Speak the response
+            speakText(replyText);
+
         } catch (error) {
             console.error('Chat API Error:', error);
-            setMessages([...newMessages, { role: 'assistant', content: "I'm having trouble connecting to my agricultural database right now. Please try again later." }]);
+            const errReply = "I'm having trouble connecting to my agricultural database right now. Please try again later.";
+            setMessages([...newMessages, { role: 'assistant', content: errReply }]);
+            speakText(errReply);
         } finally {
             setIsLoading(false);
         }
@@ -75,7 +167,17 @@ const Chatbot: React.FC = () => {
                             <h3 className="font-semibold text-lg">AgriBot AI</h3>
                         </div>
                         <div className="flex items-center gap-1">
-                            <button onClick={() => setIsOpen(false)} className="hover:bg-green-700 p-1 rounded transition-colors text-white/80 hover:text-white">
+                            <button
+                                onClick={() => {
+                                    setIsMuted(!isMuted);
+                                    window.speechSynthesis.cancel();
+                                }}
+                                className="hover:bg-green-700 p-1.5 rounded transition-colors text-white/80 hover:text-white"
+                                title={isMuted ? "Unmute Voice" : "Mute Voice"}
+                            >
+                                {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                            </button>
+                            <button onClick={() => setIsOpen(false)} className="hover:bg-green-700 p-1.5 rounded transition-colors text-white/80 hover:text-white" title="Minimize">
                                 <Minimize2 size={18} />
                             </button>
                         </div>
@@ -116,6 +218,22 @@ const Chatbot: React.FC = () => {
                                 className="flex-1 bg-transparent border-none py-3 px-4 text-sm focus:outline-none focus:ring-0 w-full"
                                 disabled={isLoading}
                             />
+
+                            {/* Voice Input Button */}
+                            {('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) && (
+                                <button
+                                    type="button"
+                                    onClick={toggleListening}
+                                    className={`p-2 rounded-full transition-colors ${isListening
+                                            ? 'text-red-500 bg-red-50 animate-pulse'
+                                            : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
+                                        }`}
+                                    title="Voice Input"
+                                >
+                                    {isListening ? <Mic size={18} /> : <MicOff size={18} />}
+                                </button>
+                            )}
+
                             <button
                                 type="submit"
                                 disabled={!input.trim() || isLoading}

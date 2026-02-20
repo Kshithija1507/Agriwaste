@@ -8,43 +8,28 @@ Illustrates how the frontend (React), backend (Express), database (MongoDB), and
 ```mermaid
 sequenceDiagram
     participant User as User
-    participant Frontend as React App (WeatherAdvisory)
-    participant Backend as Express Server (/api/weather)
-    participant DB as MongoDB (WeatherCache)
+    participant Frontend as React App (WeatherAdvisory/Recommendations)
+    participant Backend as Express Server
+    participant DB as MongoDB
     participant OpenWeather as OpenWeather API
+    participant GroqAI as Groq AI
 
-    User->>Frontend: Enters Location & Clicks Search
+    User->>Frontend: Enters Location (Weather Search)
     Frontend->>Backend: GET /api/weather/{location}
+    Backend->>DB: Check Cache
+    DB-->>Backend: Returns Cache Data
     
-    Backend->>DB: Check if location is cached (WeatherCache.findOne)
-    DB-->>Backend: Returns cache document (or null)
-    
-    alt Cache Hit & Fresh ( < 30 mins)
-        Backend-->>Frontend: Return cached data {source: "cache"}
-    else Cache Miss or Stale
-        Backend->>OpenWeather: Request weather data
-        
-        alt API Key Missing
-            Backend-->>Frontend: Return mock data {source: "mock"}
-        else OpenWeather Request Success
-            OpenWeather-->>Backend: Returns weather data
-            
-            Backend->>Backend: Calculate advisory logic
-            
-            alt Cache Exists (Stale)
-                Backend->>DB: Update existing cache
-            else Cache Does Not Exist
-                Backend->>DB: Create new cache entry
-            end
-            
-            Backend-->>Frontend: Return API data and advisory {source: "api"}
-        else OpenWeather Request Failed
-            OpenWeather--xBackend: Return 4xx/5xx Error
-            Backend-->>Frontend: Return 500 Error message
-        end
-    end
-    
-    Frontend-->>User: Display Weather Data & Advisory
+    Backend->>OpenWeather: Request Live Weather Data
+    OpenWeather-->>Backend: Weather Data
+    Backend-->>Frontend: Return Weather & Basic Advisory
+
+    User->>Frontend: Submits Inputs (Soil, Location, Waste, Sunlight)
+    Frontend->>Backend: POST /api/recommendations
+    Backend->>GroqAI: Fetch Crop Recommendations
+    GroqAI-->>Backend: Returns AI Suggestions
+    Backend->>DB: Save Recommendation History
+    Backend-->>Frontend: Return Crop Suggestions (Groq AI)
+    Frontend-->>User: Display AI Suggested Crops
 ```
 
 ## 2. Activity Diagram (Flowchart)
@@ -123,24 +108,33 @@ Represents the structural breakdown of the systems involved in the weather advis
 ```mermaid
 flowchart TB
     subgraph Frontend ["Frontend (Web)"]
-        ReactApp["React SPA (WeatherAdvisory)"]
+        ReactApp["React SPA"]
     end
 
     subgraph Backend ["Backend Server"]
-        ExpressRouter["Express Router (/api/weather)"]
+        ExpressRouter["Express API Routings"]
+        AIController["AI Controller (Groq Service)"]
+        WeatherController["Weather Controller"]
     end
 
     subgraph DB ["Database"]
-        MongoDB["MongoDB (WeatherCache)"]
+        MongoDB["MongoDB (Cache + History)"]
     end
 
     subgraph External ["External Services"]
         OpenWeatherAPI["OpenWeather API"]
+        GroqAPI["Groq AI Model"]
     end
 
-    ReactApp <-->|HTTP GET| ExpressRouter
-    ExpressRouter <-->|Mongoose queries| MongoDB
-    ExpressRouter <-->|Axios GET| OpenWeatherAPI
+    ReactApp <-->|HTTP GET/POST| ExpressRouter
+    ExpressRouter --> AIController
+    ExpressRouter --> WeatherController
+    
+    AIController <-->|Groq SDK| GroqAPI
+    WeatherController <-->|Axios GET| OpenWeatherAPI
+    
+    AIController <-->|Mongoose queries| MongoDB
+    WeatherController <-->|Mongoose queries| MongoDB
 ```
 
 ## 5. State Diagram
@@ -178,26 +172,30 @@ flowchart LR
         Farmer(("User/Farmer"))
         OpenWeather(("OpenWeather System"))
         Mongo(("Database System"))
+        Groq(("Groq AI Model"))
     end
 
-    subgraph Weather Advisory System
+    subgraph Weather & AI Advisory System
         UC1(["Input Location"])
         UC2(["View Current Weather"])
-        UC3(["Read Farming Advisory"])
-        UC4(["Validate Cache"])
-        UC5(["Fetch Live Data"])
+        UC3(["Read Basic Farming Advisory"])
+        
+        UC6(["Submit Farm Details (Soil/Waste/Sun)"])
+        UC7(["Receive 'Crop to Grow' AI Suggestion"])
+        UC8(["Save Recommendation History"])
     end
 
     Farmer --> UC1
     Farmer --> UC2
-    Farmer --> UC3
+    Farmer --> UC6
+    Farmer --> UC7
 
     UC1 -.->|includes| UC2
     UC2 -.->|includes| UC3
+    UC2 --> OpenWeather
 
-    UC2 -.->|include| UC4
-    UC4 --> Mongo
-
-    UC4 -.->|extends if cache miss| UC5
-    UC5 --> OpenWeather
+    UC6 -.->|triggers| UC7
+    UC7 --> Groq
+    UC7 -.->|includes| UC8
+    UC8 --> Mongo
 ```

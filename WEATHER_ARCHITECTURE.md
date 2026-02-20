@@ -55,7 +55,7 @@ flowchart TD
     Start([Start]) --> A[Receive GET Request for Location]
     A --> B{Is Location in Cache?}
     
-    B -- Yes --> C{Is Cache Fresh? <br/>(< 30 mins old)}
+    B -- Yes --> C{"Is Cache Fresh? <br/>(< 30 mins old)"}
     B -- No --> D{API Key Present?}
     
     C -- Yes --> E[Return Cached Data]
@@ -121,22 +121,26 @@ classDiagram
 Represents the structural breakdown of the systems involved in the weather advisory feature.
 
 ```mermaid
-architecture-beta
-    group frontend(mac)[Frontend]
-    service ReactApp(internet)[React SPA] in frontend
-    
-    group backend(mac)[Backend]
-    service ExpressRouter(server)[Weather Router] in backend
-    
-    group db(database)[Database]
-    service MongoDB(database)[MongoDB] in db
-    
-    group external(cloud)[External]
-    service OpenWeatherAPI(internet)[OpenWeather API] in external
-    
-    ReactApp:R -- L:ExpressRouter
-    ExpressRouter:R -- L:MongoDB
-    ExpressRouter:T -- B:OpenWeatherAPI
+flowchart TB
+    subgraph Frontend ["Frontend (Web)"]
+        ReactApp["React SPA (WeatherAdvisory)"]
+    end
+
+    subgraph Backend ["Backend Server"]
+        ExpressRouter["Express Router (/api/weather)"]
+    end
+
+    subgraph DB ["Database"]
+        MongoDB["MongoDB (WeatherCache)"]
+    end
+
+    subgraph External ["External Services"]
+        OpenWeatherAPI["OpenWeather API"]
+    end
+
+    ReactApp <-->|HTTP GET| ExpressRouter
+    ExpressRouter <-->|Mongoose queries| MongoDB
+    ExpressRouter <-->|Axios GET| OpenWeatherAPI
 ```
 
 ## 5. State Diagram
@@ -169,29 +173,31 @@ stateDiagram-v2
 Highlights user interactions and system boundary.
 
 ```mermaid
-usecaseDiagram
-    actor Farmer as "User/Farmer"
-    actor OpenWeather as "OpenWeather System"
-    actor Mongo as "Database System"
-    
-    package "Weather Advisory System" {
-        usecase "Input Location" as UC1
-        usecase "View Current Weather" as UC2
-        usecase "Read Farming Advisory" as UC3
-        usecase "Validate Cache" as UC4
-        usecase "Fetch Live Data" as UC5
-    }
-    
+flowchart LR
+    subgraph Actors
+        Farmer(("User/Farmer"))
+        OpenWeather(("OpenWeather System"))
+        Mongo(("Database System"))
+    end
+
+    subgraph Weather Advisory System
+        UC1(["Input Location"])
+        UC2(["View Current Weather"])
+        UC3(["Read Farming Advisory"])
+        UC4(["Validate Cache"])
+        UC5(["Fetch Live Data"])
+    end
+
     Farmer --> UC1
     Farmer --> UC2
     Farmer --> UC3
-    
-    UC1 ..> UC2 : includes
-    UC2 ..> UC3 : includes
-    
-    UC2 ..> UC4 : include
+
+    UC1 -.->|includes| UC2
+    UC2 -.->|includes| UC3
+
+    UC2 -.->|include| UC4
     UC4 --> Mongo
-    
-    UC4 ..> UC5 : extends (if cache miss)
+
+    UC4 -.->|extends (if cache miss)| UC5
     UC5 --> OpenWeather
 ```
